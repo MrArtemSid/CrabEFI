@@ -103,10 +103,14 @@ struct CbMemoryRange {
 /// Matches coreboot's `struct lb_serial` from coreboot_tables.h:
 /// - tag, size: record header (8 bytes)
 /// - type: 1 (I/O port mapped) or LB_SERIAL_TYPE_MEMORY_MAPPED (2)
-/// - baseaddr: I/O port or MMIO address
+/// - baseaddr_deprecated: 32-bit base address, zero when the address
+///   does not fit into 32 bits (newer coreboot)
 /// - baud: baud rate (e.g., 115200)
 /// - regwidth: register width in bytes
 /// - input_hertz: crystal/input frequency
+///
+/// Newer coreboot appends a 64-bit `baseaddr` after these fields
+/// (record size 36); it is read separately in `parse_serial`.
 #[repr(C, packed)]
 #[derive(FromBytes, Immutable, KnownLayout, Unaligned)]
 #[cfg_attr(test, derive(zerocopy::IntoBytes))]
@@ -114,7 +118,7 @@ struct CbSerial {
     tag: u32,
     size: u32,
     serial_type: u32,
-    baseaddr: u32,
+    baseaddr_deprecated: u32,
     baud: u32,
     regwidth: u32,
     input_hertz: u32,
@@ -312,7 +316,7 @@ pub const LB_SERIAL_TYPE_MEMORY_MAPPED: u32 = 2;
 #[derive(Debug, Clone)]
 pub struct SerialInfo {
     pub serial_type: u32,
-    pub baseaddr: u32,
+    pub baseaddr: u64,
     pub baud: u32,
     pub regwidth: u32,
     pub input_hertz: u32,
@@ -904,7 +908,17 @@ fn parse_serial(record_bytes: &[u8], info: &mut CorebootInfo) {
     };
 
     let serial_type = serial.serial_type;
-    let baseaddr = serial.baseaddr;
+    // Newer coreboot appends a 64-bit base address (record size 36) and
+    // zeroes the legacy 32-bit field; older tables carry only the latter.
+    let mut baseaddr = serial.baseaddr_deprecated as u64;
+    if serial.size >= 36 {
+        if let Some(tail) = record_bytes.get(28..36) {
+            let wide = u64::from_le_bytes(tail.try_into().unwrap());
+            if wide != 0 {
+                baseaddr = wide;
+            }
+        }
+    }
     let baud = serial.baud;
     let regwidth = serial.regwidth;
     let input_hertz = serial.input_hertz;

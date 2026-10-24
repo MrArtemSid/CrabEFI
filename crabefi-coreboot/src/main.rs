@@ -886,7 +886,7 @@ pub extern "C" fn rust_main(coreboot_table_ptr: u64) -> ! {
     if let Some(ref serial) = cb_info.serial {
         crabefi::drivers::serial::init_from_config(&crabefi::drivers::serial::SerialConfig {
             mmio: serial.mmio(),
-            baseaddr: serial.baseaddr as u64,
+            baseaddr: serial.baseaddr,
             baud: serial.baud,
             regwidth: serial.regwidth,
             input_hertz: serial.input_hertz,
