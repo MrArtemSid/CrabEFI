@@ -45,22 +45,39 @@ pub fn read_hart_id() -> u64 {
     0
 }
 
-/// Direct 16550 UART write (bypasses all logging infrastructure).
+/// Early console write via SBI (bypasses all logging infrastructure).
 ///
-/// Writes directly to the QEMU virt 16550 UART at 0x1000_0000.
-/// Use for debugging when the normal logging path may be broken.
-#[inline]
-pub fn uart_direct_write(s: &[u8]) {
-    const UART_BASE: *mut u8 = 0x1000_0000 as *mut u8;
-    const UART_LSR: *const u8 = 0x1000_0005 as *const u8;
-    const LSR_TX_EMPTY: u8 = 0x20;
+/// Output goes to whatever console OpenSBI itself drives — OpenSBI selects
+/// it from its own device tree, so no platform UART address is baked in
+/// here. Prefers the Debug Console extension (DBCN) and falls back to the
+/// legacy putchar call on implementations without it.
+///
+/// Use for debugging when the normal logging path may be broken; the
+/// runtime serial driver is initialized later from the coreboot tables
+/// (or the handoff FDT when tables are unavailable).
+pub fn console_write(s: &[u8]) {
+    use crate::arch::riscv64::sbi;
+    use core::sync::atomic::{AtomicU8, Ordering};
+
+    // 0 = not probed yet, 1 = DBCN, 2 = legacy putchar.
+    static MODE: AtomicU8 = AtomicU8::new(0);
+
+    if s.is_empty() {
+        return;
+    }
+
+    let mut mode = MODE.load(Ordering::Relaxed);
+    if mode == 0 {
+        mode = if sbi::sbi_probe_extension(sbi::SBI_EXT_DBCN) { 1 } else { 2 };
+        MODE.store(mode, Ordering::Relaxed);
+    }
+
+    if mode == 1 && sbi::sbi_dbcn_write(s).is_ok() {
+        return;
+    }
 
     for &byte in s {
-        unsafe {
-            // Wait for TX holding register empty
-            while core::ptr::read_volatile(UART_LSR) & LSR_TX_EMPTY == 0 {}
-            core::ptr::write_volatile(UART_BASE, byte);
-        }
+        sbi::sbi_putchar(byte);
     }
 }
 

@@ -521,6 +521,17 @@ fn convert_memory_map(
 /// Global panic handler for the coreboot payload.
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+    #[cfg(target_arch = "riscv64")]
+    {
+        struct EarlyUart;
+        impl core::fmt::Write for EarlyUart {
+            fn write_str(&mut self, s: &str) -> core::fmt::Result {
+                crabefi::arch::riscv64::console_write(s.as_bytes());
+                Ok(())
+            }
+        }
+        let _ = core::fmt::write(&mut EarlyUart, format_args!("\r\n{info}\r\n"));
+    }
     if let Some(location) = info.location() {
         log::error!(
             "PANIC at {}:{}: {}",
@@ -553,9 +564,9 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(target_arch = "riscv64")]
 #[unsafe(no_mangle)]
 pub extern "C" fn riscv_main(hart_id: u64, fdt_ptr: u64) -> ! {
-    // Early console: write directly to the QEMU virt 16550 UART so we
-    // get output even before logging is initialized.
-    crabefi::arch::riscv64::uart_direct_write(b"CrabEFI: RISC-V entry (S-mode)\r\n");
+    // Early console: emit through SBI (DBCN/putchar) so the banner goes to
+    // whatever console OpenSBI drives, before logging is initialized.
+    crabefi::arch::riscv64::console_write(b"CrabEFI: RISC-V entry (S-mode)\r\n");
 
     // Parse the FDT header to get total size, then extract the coreboot
     // table pointer from /chosen/coreboot-table.
