@@ -158,6 +158,7 @@ pub mod serial_regs;
 pub mod spi;
 pub mod storage;
 pub mod usb;
+pub mod virtio;
 
 /// Stop firmware-owned DMA before transferring control to an operating system.
 ///

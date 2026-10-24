@@ -166,6 +166,10 @@ extern "efiapi" fn storage_security_receive_data(
             log::warn!("StorageSecurity: SDHCI security commands not supported");
             return Status::UNSUPPORTED;
         }
+        StorageId::Virtio { .. } => {
+            log::warn!("StorageSecurity: VirtIO security commands not supported");
+            return Status::UNSUPPORTED;
+        }
         StorageId::Platform { .. } => {
             log::warn!("StorageSecurity: Platform device security commands not supported");
             return Status::UNSUPPORTED;
@@ -274,6 +278,10 @@ extern "efiapi" fn storage_security_send_data(
         ),
         StorageId::Sdhci { .. } => {
             log::warn!("StorageSecurity: SDHCI security commands not supported");
+            return Status::UNSUPPORTED;
+        }
+        StorageId::Virtio { .. } => {
+            log::warn!("StorageSecurity: VirtIO security commands not supported");
             return Status::UNSUPPORTED;
         }
         StorageId::Platform { .. } => {

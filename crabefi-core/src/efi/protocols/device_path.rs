@@ -526,6 +526,98 @@ pub struct SataDevicePathNode {
 /// Sub-type for SATA device path
 const SUBTYPE_SATA: u8 = 0x12;
 
+/// Type for media device path nodes is imported from r_efi (`TYPE_MEDIA`).
+/// Sub-type for vendor-defined media nodes
+const SUBTYPE_MEDIA_VENDOR: u8 = 0x03;
+
+/// GUID tagging CrabEFI's vendor-defined virtio-mmio transport node.
+///
+/// Payload data is the 64-bit MMIO base address of the transport. Nothing is
+/// expected to match on this GUID; it only has to be unique and stable so
+/// that whole-disk and partition handles carry well-formed, distinct paths.
+const VIRTIO_MMIO_VENDOR_GUID: [u8; 16] = [
+    0x8a, 0x5f, 0xc9, 0x33, 0x6d, 0x4a, 0x4e, 0x7a, 0xb3, 0x19, 0x8e, 0x2c, 0x71, 0x45, 0x63,
+    0x0f,
+];
+
+/// Vendor-defined media node describing one virtio-mmio transport.
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct VirtioMmioDevicePathNode {
+    pub r#type: u8,
+    pub sub_type: u8,
+    pub length: [u8; 2],
+    pub vendor_guid: [u8; 16],
+    /// Little-endian MMIO base of the transport.
+    pub mmio_base: [u8; 8],
+}
+
+impl VirtioMmioDevicePathNode {
+    /// Create a vendor node for the transport at `mmio_base`.
+    #[inline]
+    const fn new(mmio_base: u64) -> Self {
+        Self {
+            r#type: TYPE_MEDIA,
+            sub_type: SUBTYPE_MEDIA_VENDOR,
+            length: (core::mem::size_of::<Self>() as u16).to_le_bytes(),
+            vendor_guid: VIRTIO_MMIO_VENDOR_GUID,
+            mmio_base: mmio_base.to_le_bytes(),
+        }
+    }
+}
+
+/// Full virtio-mmio device path: Vendor(media) + End
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct FullVirtioDevicePath {
+    pub vendor: VirtioMmioDevicePathNode,
+    pub end: End,
+}
+
+/// Full virtio-mmio partition device path: Vendor(media) + HardDrive + End
+#[repr(C, packed)]
+#[derive(Clone, Copy)]
+pub struct FullVirtioPartitionDevicePath {
+    pub vendor: VirtioMmioDevicePathNode,
+    pub hard_drive: HardDriveMedia,
+    pub end: End,
+}
+
+/// Create a device path for a virtio-mmio block device (whole disk)
+pub fn create_virtio_device_path(mmio_base: u64) -> *mut Protocol {
+    let dp = FullVirtioDevicePath {
+        vendor: VirtioMmioDevicePathNode::new(mmio_base),
+        end: create_end_node(),
+    };
+    log::debug!("Created virtio-mmio device path: base={:#x}", mmio_base);
+    allocate_device_path(dp)
+}
+
+/// Create a device path for a partition on a virtio-mmio block device
+pub fn create_virtio_partition_device_path(
+    mmio_base: u64,
+    partition_number: u32,
+    partition_start: u64,
+    partition_size: u64,
+    partition_guid: &[u8; 16],
+) -> *mut Protocol {
+    let dp = FullVirtioPartitionDevicePath {
+        vendor: VirtioMmioDevicePathNode::new(mmio_base),
+        hard_drive: create_hard_drive_node(
+            partition_number,
+            partition_start,
+            partition_size,
+            partition_guid,
+        ),
+        end: create_end_node(),
+    };
+    log::debug!(
+        "Created virtio-mmio partition device path: base={:#x}, partition={}",
+        mmio_base, partition_number
+    );
+    allocate_device_path(dp)
+}
+
 impl SataDevicePathNode {
     /// Create a SATA device path node
     #[inline]
@@ -1046,6 +1138,11 @@ pub enum DevicePathInfo {
     },
     /// SDHCI (SD card) - uses USB device path with port=0
     Sdhci { pci_device: u8, pci_function: u8 },
+    /// VirtIO block device on a virtio-mmio transport (non-PCI).
+    ///
+    /// Uses a vendor-defined media node carrying the transport's MMIO base,
+    /// mirroring how EDK2 names virtio-mmio devices.
+    Virtio { mmio_base: u64 },
     /// Platform-provided block device (non-PCI).
     ///
     /// Uses a vendor-defined device path node since these devices have no
@@ -1088,6 +1185,7 @@ pub fn create_disk_device_path(info: &DevicePathInfo) -> *mut Protocol {
             pci_device,
             pci_function,
         } => create_usb_device_path(pci_device, pci_function, 0),
+        DevicePathInfo::Virtio { mmio_base } => create_virtio_device_path(mmio_base),
         DevicePathInfo::Platform { .. } => {
             // A proper vendor-defined node can be added later.
             // Returning null causes the caller to skip device path installation,
@@ -1177,6 +1275,13 @@ pub fn create_partition_device_path(
             pci_device,
             pci_function,
             0,
+            partition_number,
+            partition_start,
+            partition_size,
+            partition_guid,
+        ),
+        DevicePathInfo::Virtio { mmio_base } => create_virtio_partition_device_path(
+            mmio_base,
             partition_number,
             partition_start,
             partition_size,

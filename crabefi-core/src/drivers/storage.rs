@@ -13,7 +13,7 @@ use heapless::{String, Vec as FixedVec};
 use crate::cell::Local;
 use crate::drivers::block::{BlockDevice, BlockDeviceInfo, BlockError};
 use crate::drivers::pci::PciAddress;
-use crate::drivers::{ahci, nvme, sdhci, usb};
+use crate::drivers::{ahci, nvme, sdhci, usb, virtio};
 
 /// Maximum number of platform-provided block devices.
 const MAX_PLATFORM_BLOCK_DEVICES: usize = 8;
@@ -59,6 +59,8 @@ pub enum StorageId {
     },
     /// SDHCI (SD card / eMMC)
     Sdhci { controller_id: usize },
+    /// VirtIO block device on a virtio-mmio transport
+    Virtio { index: usize },
     /// Platform-provided block device (via [`crate::PlatformConfig::block_devices`]).
     Platform { index: usize },
 }
@@ -71,6 +73,7 @@ impl StorageId {
             StorageId::Ahci { .. } => "SATA",
             StorageId::Usb { .. } => "USB",
             StorageId::Sdhci { .. } => "SD",
+            StorageId::Virtio { .. } => "VirtIO",
             StorageId::Platform { .. } => "Platform",
         }
     }
@@ -170,6 +173,17 @@ pub fn devices() -> Vec<StorageDevice> {
         });
     }
 
+    for index in 0..virtio::device_count() {
+        virtio::with_device(index, |device| {
+            push(StorageDevice {
+                id: StorageId::Virtio { index },
+                pci: None,
+                info: device.info(),
+                label: label(format_args!("VirtIO disk")),
+            });
+        });
+    }
+
     PLATFORM_BLOCK_DEVICES.with_mut(|platform_devices| {
         for (index, &device) in platform_devices.iter().enumerate() {
             // SAFETY: registered devices outlive the firmware and the borrow
@@ -258,6 +272,9 @@ pub fn with_disk<R>(
                 }),
             )))
         }),
+        StorageId::Virtio { index } => {
+            Some(virtio::with_device(index, |device| f(device)))
+        }
         StorageId::Platform { index } => Some(PLATFORM_BLOCK_DEVICES.with_mut(|devices| {
             let &device = devices.get(index)?;
             // SAFETY: registered devices outlive the firmware and the mutable

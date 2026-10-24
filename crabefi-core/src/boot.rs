@@ -14,6 +14,7 @@ use r_efi::efi::Status;
 
 use crate::drivers::block::{BlockDevice, BlockDeviceInfo};
 use crate::drivers::storage::{self, StorageId};
+use crate::drivers::virtio;
 use crate::efi;
 use crate::efi::boot_services;
 use crate::efi::protocols::block_io::{self, BLOCK_IO_PROTOCOL_GUID};
@@ -486,6 +487,9 @@ pub fn device_path_info_from_entry(entry: &menu::BootEntry) -> DevicePathInfo {
         StorageId::Sdhci { .. } => DevicePathInfo::Sdhci {
             pci_device,
             pci_function,
+        },
+        StorageId::Virtio { index } => DevicePathInfo::Virtio {
+            mmio_base: virtio::transport_base(index).unwrap_or(0),
         },
         StorageId::Platform { index } => DevicePathInfo::Platform { index },
     }

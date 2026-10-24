@@ -30,6 +30,10 @@ fn init_storage_subsystem() {
     // This uses the table-driven driver model instead of hardcoded init calls
     drivers::pci::bind_drivers();
 
+    // Probe virtio-mmio transports described by the platform FDT (QEMU-style
+    // machines); registers any block devices found on them.
+    drivers::virtio::init();
+
     // Rescan UHCI/OHCI companion controller ports for devices that EHCI
     // released after the initial scan (ICH8/9/10 chipsets initialize UHCI
     // before EHCI due to PCI BDF ordering)

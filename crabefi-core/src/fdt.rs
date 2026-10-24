@@ -10,6 +10,8 @@ use crate::platform::PciEcamRegion;
 
 /// Maximum number of devices discovered from DSDT.
 pub const MAX_DSDT_DEVICES: usize = 16;
+/// Virtio-mmio transports tracked per platform (QEMU machines create eight).
+pub const MAX_VIRTIO_MMIO: usize = 8;
 
 /// A device discovered from the ACPI DSDT namespace.
 ///
@@ -135,6 +137,8 @@ pub struct PlatformInfo {
     pub gicr: Option<(u64, u64)>,
     /// PL011 UART base address
     pub uart_base: Option<u64>,
+    /// Virtio-mmio transport base addresses (`compatible = "virtio,mmio"`)
+    pub virtio_mmio: heapless::Vec<u64, MAX_VIRTIO_MMIO>,
     /// Devices discovered from DSDT `Device` scopes.
     pub dsdt_devices: heapless::Vec<DsdtDevice, MAX_DSDT_DEVICES>,
 }
@@ -148,6 +152,7 @@ impl PlatformInfo {
             gicd: None,
             gicr: None,
             uart_base: None,
+            virtio_mmio: heapless::Vec::new(),
             dsdt_devices: heapless::Vec::new(),
         }
     }
@@ -155,6 +160,11 @@ impl PlatformInfo {
     /// Return all discovered ECAM allocations.
     pub fn ecam_regions(&self) -> &[PciEcamRegion] {
         self.ecam_regions.as_slice()
+    }
+
+    /// Return all discovered virtio-mmio transport bases.
+    pub fn virtio_mmio_regions(&self) -> &[u64] {
+        self.virtio_mmio.as_slice()
     }
 
     /// Retain one validated ECAM allocation, rejecting overlap and excess.
@@ -211,6 +221,7 @@ pub unsafe fn parse(fdt_addr: u64, fdt_size: u32) -> Option<PlatformInfo> {
     extract_pcie(&dt, &mut info);
     extract_gic(&dt, &mut info);
     extract_uart(&dt, &mut info);
+    extract_virtio(&dt, &mut info);
 
     log::info!("FDT parsed:");
     for region in info.ecam_regions() {
@@ -552,6 +563,23 @@ fn extract_uart(dt: &fdt::Fdt, info: &mut PlatformInfo) {
         && let Some(reg) = regs.next()
     {
         info.uart_base = Some(reg.starting_address as u64);
+    }
+}
+
+/// Collect virtio-mmio transport base addresses.
+///
+/// The node describes the transport only; which virtio device (if any) sits
+/// on it is read from the transport's MMIO device ID at probe time.
+#[cfg(any(target_arch = "aarch64", target_arch = "riscv64"))]
+fn extract_virtio(dt: &fdt::Fdt, info: &mut PlatformInfo) {
+    for node in dt.all_nodes() {
+        if node.compatible().is_some_and(|c| c.all().any(|s| s == "virtio,mmio"))
+            && let Some(mut regs) = node.reg()
+            && let Some(reg) = regs.next()
+            && reg.size.unwrap_or(0) > 0
+        {
+            let _ = info.virtio_mmio.push(reg.starting_address as u64);
+        }
     }
 }
 
