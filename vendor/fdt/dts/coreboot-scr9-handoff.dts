@@ -1,0 +1,540 @@
+/dts-v1/;
+
+/ {
+	compatible = "syntacore,scr_sdk";
+	#address-cells = <0x02>;
+	#size-cells = <0x02>;
+	model = "IPDEV VCU118 SCR9 L3 prototype";
+
+	cpus {
+		#address-cells = <0x01>;
+		#size-cells = <0x00>;
+		timebase-frequency = <0xf4240>;
+
+		cpu@0 {
+			reg = <0x00>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x01>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x17>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x01>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x0b>;
+			};
+		};
+
+		cpu@1 {
+			reg = <0x01>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x04>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x18>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x04>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x0c>;
+			};
+		};
+
+		cpu@2 {
+			reg = <0x02>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x05>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x19>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x05>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x0d>;
+			};
+		};
+
+		cpu@3 {
+			reg = <0x03>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x06>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x1a>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x06>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x0e>;
+			};
+		};
+
+		cpu@4 {
+			reg = <0x04>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x07>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x1b>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x07>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x0f>;
+			};
+		};
+
+		cpu@5 {
+			reg = <0x05>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x08>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x1c>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x08>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x10>;
+			};
+		};
+
+		cpu@6 {
+			reg = <0x06>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x09>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x1d>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x09>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x11>;
+			};
+		};
+
+		cpu@7 {
+			reg = <0x07>;
+			device_type = "cpu";
+			status = "okay";
+			next-level-cache = <0x0a>;
+			compatible = "syntacore,scr9", "riscv";
+			riscv,isa = "rv64imafdc_zicond_zba_zbb_zbc_zbs_sscofpmf";
+			riscv,isa-base = "rv64i";
+			riscv,isa-extensions = "i", "m", "a", "f", "d", "c", "zicond", "zba", "zbb", "zbc", "zbs", "sscofpmf", "zicntr";
+			mmu-type = "riscv,sv39";
+			d-cache-block-size = <0x40>;
+			d-cache-sets = <0x40>;
+			d-cache-size = <0x8000>;
+			i-cache-block-size = <0x40>;
+			i-cache-sets = <0x40>;
+			i-cache-size = <0x8000>;
+			riscv,cbom-block-size = <0x40>;
+			clock-frequency = <0x4c4b400>;
+			phandle = <0x1e>;
+
+			l2-cache {
+				compatible = "cache";
+				cache-unified;
+				next-level-cache = <0x03>;
+				cache-level = <0x02>;
+				cache-block-size = <0x40>;
+				cache-sets = <0x100>;
+				cache-size = <0x40000>;
+				phandle = <0x0a>;
+			};
+
+			interrupt-controller {
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+				#interrupt-cells = <0x01>;
+				#address-cells = <0x00>;
+				phandle = <0x12>;
+			};
+		};
+
+		l3-cache {
+			compatible = "cache";
+			cache-unified;
+			cache-size = <0x400000>;
+			cache-sets = <0x200>;
+			cache-block-size = <0x40>;
+			cache-level = <0x03>;
+			phandle = <0x03>;
+		};
+	};
+
+	pmu {
+		compatible = "riscv,pmu";
+		interrupts-extended = <0x0b 0x0d 0x0c 0x0d 0x0d 0x0d 0x0e 0x0d 0x0f 0x0d 0x10 0x0d 0x11 0x0d 0x12 0x0d>;
+	};
+
+	chosen {
+		coreboot-table = <0x04 0x1ffdc000>;
+		bootargs = "earlycon=sbi console=ttyS0,115200 initrdmem=0x430000000,512M net.ifnames=0 swiotlb=noforce";
+		stdout-path = "serial";
+
+		scr-root-domain {
+			#address-cells = <0x02>;
+			#size-cells = <0x02>;
+			compatible = "syntacore,root-domain";
+
+			ocram@2000000 {
+				reg = <0x00 0x2000000 0x00 0x80000>;
+				flags = <0x03>;
+			};
+		};
+	};
+
+	memory@400000000 {
+		reg = <0x04 0x00 0x00 0x7e000000>;
+		device_type = "memory";
+	};
+
+	reserved-memory {
+		ranges;
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+
+		mmode_resv1@4,4040000 {
+			reg = <0x04 0x4040000 0x00 0x40000>;
+			no-map;
+		};
+
+		mmode_resv0@4,4000000 {
+			reg = <0x04 0x4000000 0x00 0x40000>;
+			no-map;
+		};
+
+		linux,dma@0 {
+			compatible = "shared-dma-pool";
+			reg = <0x04 0x7e000000 0x00 0x2000000>;
+			linux,dma-default;
+			no-map;
+		};
+	};
+
+	clocks {
+
+		clk {
+			compatible = "fixed-clock";
+			#clock-cells = <0x00>;
+			clock-frequency = <0x3dfd240>;
+			phandle = <0x27>;
+		};
+	};
+
+	firmware {
+		syntacore,bldid = "22041500";
+	};
+
+	scr-fpga-reg {
+		compatible = "syntacore,fpga-reg-v1";
+		syntacore,buildid-reg = <0x00 0xc000000>;
+		syntacore,sysclk-reg = <0x00 0xc001000>;
+		syntacore,clsclk-reg = <0x00 0xc002000>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		device_type = "soc";
+		ranges;
+		#address-cells = <0x02>;
+		#size-cells = <0x02>;
+		bus-frequency = <0x3dfd240>;
+		dma-noncoherent;
+
+		cluster_bus {
+			compatible = "simple-bus";
+			ranges;
+			#address-cells = <0x02>;
+			#size-cells = <0x02>;
+
+			interrupt-controller@4020000 {
+				compatible = "syntacore,iccm-mmio";
+				reg = <0x00 0x4020000 0x00 0x20000>;
+			};
+
+			timer@4010000 {
+				compatible = "syntacore,mtimer";
+				reg = <0x00 0x4010000 0x00 0x2000>;
+				interrupts-extended = <0x0b 0x07 0x0c 0x07 0x0d 0x07 0x0e 0x07 0x0f 0x07 0x10 0x07 0x11 0x07 0x12 0x07>;
+				clock-frequency = <0xf7f490>;
+				scr,timsrc-external;
+			};
+
+			interrupt-controller@6000000 {
+				compatible = "syntacore,plic";
+				reg = <0x00 0x6000000 0x00 0x2000000>;
+				reg-names = "control";
+				#interrupt-cells = <0x02>;
+				interrupt-controller;
+				interrupts-extended = <0x0b 0x0b 0x0b 0x09 0x0c 0x0b 0x0c 0x09 0x0d 0x0b 0x0d 0x09 0x0e 0x0b 0x0e 0x09 0x0f 0x0b 0x0f 0x09 0x10 0x0b 0x10 0x09 0x11 0x0b 0x11 0x09 0x12 0x0b 0x12 0x09>;
+				riscv,ndev = <0xff>;
+				riscv,max-priority = <0x07>;
+				scr,plic-msi;
+				scr,irq_en_base = <0x4000>;
+				scr,irq_en_size = <0x100>;
+				phandle = <0x16>;
+			};
+
+			cache-controller@e8000000 {
+				compatible = "syntacore,l2-cache";
+				reg = <0x00 0xe8000000 0x00 0x2000>;
+			};
+
+			cache-controller@4004000 {
+				compatible = "syntacore,l3-cache";
+				reg = <0x00 0x4004000 0x00 0x4000>;
+			};
+		};
+
+		ethernet@f040000 {
+			compatible = "xlnx,axi-ethernet-1.00.a";
+			reg = <0x00 0xf040000 0x00 0x40000>;
+			device_type = "network";
+			local-mac-address = [00 0a 35 04 d0 99];
+			phy-handle = <0x25>;
+			pcs-handle = <0x26>;
+			phy-mode = "sgmii";
+			managed = "in-band-status";
+			xlnx,rxmem = <0x1000>;
+			xlnx,rxcsum = <0x02>;
+			xlnx,txcsum = <0x02>;
+			axistream-connected = <0x14>;
+			axistream-control-connected = <0x14>;
+			phandle = <0x15>;
+
+			mdio {
+				#address-cells = <0x01>;
+				#size-cells = <0x00>;
+
+				phy@4 {
+					compatible = "ethernet-phy-id0174.0c00";
+					reg = <0x04>;
+					phandle = <0x26>;
+				};
+
+				phy@3 {
+					compatible = "ethernet-phy-ieee802.3-c22";
+					reg = <0x03>;
+					ti,fifo-depth = <0x03>;
+					ti,sgmii-ref-clock-output-enable = <0x01>;
+					ti,dp83867-rxctrl-strap-quirk = <0x01>;
+					phandle = <0x25>;
+				};
+			};
+		};
+
+		dma@f080000 {
+			compatible = "xlnx,eth-dma";
+			reg = <0x00 0xf080000 0x00 0x10000>;
+			#dma-cells = <0x01>;
+			clock-names = "s_axi_lite_aclk";
+			axistream-connected = <0x15>;
+			axistream-control-connected = <0x15>;
+			xlnx,include-dre;
+			interrupt-parent = <0x16>;
+			interrupts = <0x03 0x04 0x02 0x04>;
+			clocks = <0x27>;
+			clock-frequency = <0x3dfd240>;
+			phandle = <0x14>;
+		};
+
+		serial@1e140000 {
+			compatible = "ns16550a";
+			reg = <0x00 0x1e140000 0x00 0x1000>;
+			reg-io-width = <0x04>;
+			reg-shift = <0x02>;
+			current-speed = <0x1c200>;
+			interrupt-parent = <0x16>;
+			interrupts = <0x3c 0x04>;
+			clocks = <0x27>;
+			clock-frequency = <0x3dfd240>;
+			phandle = <0x13>;
+		};
+	};
+
+	aliases {
+		ethernet = "/soc/ethernet@f040000";
+		serial = "/soc/serial@1e140000";
+	};
+};

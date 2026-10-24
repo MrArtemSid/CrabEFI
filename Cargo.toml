@@ -24,6 +24,11 @@ exclude = [
 ]
 resolver = "3"
 
+# Vendored fdt 0.1.5 with a fix for FDT_NOP tokens that coreboot leaves between
+# properties when patching the handoff devicetree with libfdt.
+[patch.crates-io]
+fdt = { path = "vendor/fdt" }
+
 [workspace.package]
 edition = "2024"
 license = "Apache-2.0 OR MIT"
