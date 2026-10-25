@@ -568,6 +568,56 @@ pub extern "C" fn riscv_main(hart_id: u64, fdt_ptr: u64) -> ! {
     // whatever console OpenSBI drives, before logging is initialized.
     crabefi::arch::riscv64::console_write(b"CrabEFI: RISC-V entry (S-mode)\r\n");
 
+    // Probe Zicbom with trap recovery: execute cbo.clean under a stvec stub
+    // that skips the instruction and records the trap. With zicbom declared
+    // in the device tree, OpenSBI sets menvcfg.CBCFE/CBIE for S-mode and the
+    // instruction must execute; a trap means the core does not implement it
+    // (or the extension was not made accessible).
+    #[cfg(target_arch = "riscv64")]
+    {
+        static CBO_TRAPPED: AtomicU64 = AtomicU64::new(0);
+        CBO_TRAPPED.store(0, Ordering::Relaxed);
+        let probe = [0u8; 64];
+        let addr = probe.as_ptr() as usize;
+        // SAFETY: `probe` is an aligned, resident stack line; cbo.clean on
+        // supported cores only affects cache state. The instruction is
+        // encoded directly (cbo.clean with rs1=a0) because the compilation
+        // target does not declare the Zicbom feature for the assembler. The
+        // stvec stub skips a trapped instruction (sepc += 4) and marks the
+        // flag; a supported core falls through to the join label instead.
+        unsafe {
+            core::arch::asm!(
+                "la    t0, 2f",
+                "csrw  stvec, t0",
+                "la    t2, {trapped}",
+                "sd    zero, 0(t2)",
+                "mv    a0, {addr}",
+                ".word 0x0015200F",
+                "j     3f",
+                "2:  li    t1, 1",
+                "sd    t1, 0(t2)",
+                "csrr  t0, sepc",
+                "addi  t0, t0, 4",
+                "csrw  sepc, t0",
+                "sret",
+                "3:  nop",
+                trapped = sym CBO_TRAPPED,
+                addr = in(reg) addr,
+                out("t0") _, out("t1") _, out("t2") _, out("a0") _,
+                options(nostack)
+            );
+        }
+        if CBO_TRAPPED.load(Ordering::Relaxed) != 0 {
+            crabefi::arch::riscv64::console_write(
+                b"CrabEFI: cbo.clean TRAPPED (Zicbom not implemented)\r\n",
+            );
+        } else {
+            crabefi::arch::riscv64::console_write(
+                b"CrabEFI: cbo.clean OK (Zicbom implemented)\r\n",
+            );
+        }
+    }
+
     // Parse the FDT header to get total size, then extract the coreboot
     // table pointer from /chosen/coreboot-table.
     let (coreboot_table_ptr, fdt_size) = extract_coreboot_table_from_fdt(fdt_ptr);
