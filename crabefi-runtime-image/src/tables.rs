@@ -344,29 +344,6 @@ impl ImageTables {
         self.system.standard_error_handle = core::ptr::null_mut();
         self.system.std_err = core::ptr::null_mut();
         self.system.boot_services = core::ptr::null_mut();
-        // UEFI semantics: configuration table entries hold physical
-        // addresses until the OS calls SetVirtualAddressMap, which
-        // re-converts them from its own virtual map. The image's internal
-        // virtual transition may have converted them earlier; restore
-        // the recorded physical addresses so the OS-visible table stays
-        // dereferenceable on platforms whose virtual window does not alias
-        // RAM (e.g. RISC-V boards with DRAM only at high addresses).
-        //
-        // The system table's own pointer fields are restored from the
-        // live objects for the same reason: the kernel dereferences
-        // configuration_table after ExitBootServices.
-        self.system.firmware_vendor = self.vendor.as_mut_ptr();
-        self.system.runtime_services = &mut self.runtime;
-        self.system.configuration_table = self.configuration.as_mut_ptr();
-        for (entry, metadata) in self
-            .configuration
-            .iter_mut()
-            .zip(self.configuration_metadata.iter())
-        {
-            if metadata.policy == configuration_policy::IMAGE_RUNTIME {
-                entry.vendor_table = metadata.physical_address as *mut c_void;
-            }
-        }
         self.recompute_crcs();
     }
 
@@ -380,17 +357,15 @@ impl ImageTables {
         self.system.configuration_table = convert(self.system.configuration_table as u64)
             .unwrap_or(self.system.configuration_table as u64)
             as *mut efi::ConfigurationTable;
-        for (entry, metadata) in self
-            .configuration
-            .iter_mut()
-            .zip(self.configuration_metadata.iter())
-        {
-            if metadata.policy == configuration_policy::IMAGE_RUNTIME
-                && let Some(virtual_address) = convert(metadata.physical_address)
-            {
-                entry.vendor_table = virtual_address as *mut c_void;
-            }
-        }
+        // Configuration table entries deliberately keep their physical
+        // addresses across SetVirtualAddressMap: Linux dereferences them
+        // (Memory Attributes Table, RT Properties) via memremap of the
+        // table address as a PHYSICAL address even after the virtual
+        // transition, and platforms whose DRAM does not cover the OS's
+        // virtual window (e.g. RISC-V boards with RAM only at high
+        // addresses) would access-fault on converted values. The OS calls
+        // runtime services through the converted system-table pointers
+        // above; it never follows these entries through the virtual map.
     }
 
     pub fn recompute_crcs(&mut self) {
